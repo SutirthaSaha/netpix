@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -5,11 +6,15 @@ import 'package:netpix/pages/profile_page.dart';
 import 'package:netpix/pages/search_page.dart';
 import 'package:netpix/pages/timeline_page.dart';
 import 'package:netpix/pages/upload_page.dart';
+import 'package:netpix/models/user.dart';
 
+import 'create_account_page.dart';
 import 'notifications_page.dart';
 
 
 final GoogleSignIn gSignIn = GoogleSignIn();
+final userReference = FirebaseFirestore.instance.collection("users");
+late final User currentUser;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -43,6 +48,7 @@ class _HomePageState extends State<HomePage> {
   }
   controlSignIn(GoogleSignInAccount? signInAccount) async{
     if (signInAccount!=null){
+      await saveUserInfoToFireStore();
       setState(() {
         isSignedIn = true;
       });
@@ -139,6 +145,34 @@ class _HomePageState extends State<HomePage> {
           ],
         )
       ),
+    );
+  }
+
+  saveUserInfoToFireStore() async {
+    final GoogleSignInAccount? gCurrentUser = gSignIn.currentUser;
+    DocumentSnapshot documentSnapshot = await userReference.doc(gCurrentUser!.id.toString()).get();
+
+    if(!documentSnapshot.exists){
+      final username = await Navigator.push(context, MaterialPageRoute(builder: (context)=>CreateAccountPage()));
+      userReference.doc(gCurrentUser.id).set({
+        "id":gCurrentUser.id,
+        "profileName":gCurrentUser.displayName,
+        "username": username,
+        "url": gCurrentUser.photoUrl,
+        "email": gCurrentUser.email,
+        "bio": "",
+        "timestamp": DateTime.now()
+      });
+      documentSnapshot = await userReference.doc(gCurrentUser.id.toString()).get();
+    }
+
+    currentUser = User(
+      id: documentSnapshot.id,
+      email: documentSnapshot['email'],
+      username: documentSnapshot['username'],
+      url: documentSnapshot['photoUrl'],
+      profileName: documentSnapshot['displayName'],
+      bio: documentSnapshot['bio'],
     );
   }
 }
