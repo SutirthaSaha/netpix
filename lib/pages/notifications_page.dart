@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:netpix/widgets/header_page.dart';
 
 class NotificationsPage extends StatefulWidget {
   @override
@@ -8,7 +9,9 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
-    return Text('Here goes Activity Feed Page');
+    return Scaffold(
+      appBar: header(context, strTitle: "Notifications"),
+    );
   }
 }
 

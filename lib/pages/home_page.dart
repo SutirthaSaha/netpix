@@ -1,6 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:netpix/pages/profile_page.dart';
+import 'package:netpix/pages/search_page.dart';
+import 'package:netpix/pages/timeline_page.dart';
+import 'package:netpix/pages/upload_page.dart';
+
+import 'notifications_page.dart';
 
 
 final GoogleSignIn gSignIn = GoogleSignIn();
@@ -14,10 +20,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isSignedIn = false;
+  late PageController pageController;
+  int getPageIndex = 0;
 
   @override
   void initState() {
     super.initState();
+
+    pageController = PageController();
+
     gSignIn.onCurrentUserChanged.listen((gSignInAccount){
       controlSignIn(gSignInAccount);
     },onError: (gError){
@@ -50,6 +61,16 @@ class _HomePageState extends State<HomePage> {
     gSignIn.signOut();
   }
 
+  whenPageChanges(int index){
+    setState(() {
+      getPageIndex = index;
+    });
+  }
+
+  onTapChangePage(int index){
+    pageController.animateToPage(index, duration: const Duration(milliseconds: 400), curve: Curves.bounceInOut);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isSignedIn){
@@ -60,7 +81,34 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildHomeScreen() {
-    return ElevatedButton.icon(onPressed: logoutUser, icon: const Icon(Icons.close), label: const Text("Sign Out"));
+    // return ElevatedButton.icon(onPressed: logoutUser, icon: const Icon(Icons.close), label: const Text("Sign Out"));
+    return Scaffold(
+      body: PageView(
+        children: <Widget>[
+          TimelinePage(),
+          SearchPage(),
+          UploadPage(),
+          NotificationsPage(),
+          ProfilePage()
+        ],
+        controller: pageController,
+        onPageChanged: whenPageChanges,
+        physics: const NeverScrollableScrollPhysics(),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: getPageIndex,
+        onTap: onTapChangePage,
+        selectedItemColor: Colors.black87,
+        unselectedItemColor: Colors.black12,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: "Add Post"),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notifications"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        ],
+      ),
+    );
   }
 
   Widget buildSignInScreen() {

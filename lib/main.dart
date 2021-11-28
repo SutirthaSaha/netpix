@@ -6,19 +6,36 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  final ColorScheme colorScheme = const ColorScheme(
+    primary: Color(0xFFFFFFFF), // <---- I set white color here
+    primaryVariant: Color(0xFF117378),
+    secondary: Color(0xFFEFF3F3),
+    secondaryVariant: Color(0xFFFAFBFB),
+    background: Color(0xFF636363),
+    surface: Color(0xFF808080),
+    onBackground: Colors.white,
+    error: Colors.redAccent,
+    onError: Colors.redAccent,
+    onPrimary: Colors.redAccent,
+    onSecondary: Color(0xFF322942),
+    onSurface: Color(0xFF241E30),
+    brightness: Brightness.light,
+  );
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'NetPix',
+      title: 'BuddiesGram',
       debugShowCheckedModeBanner: false,
       theme: ThemeData
         (
         scaffoldBackgroundColor: Colors.white,
         dialogBackgroundColor: Colors.white,
         primarySwatch: Colors.grey,
-        cardColor: Colors.white70
+        cardColor: Colors.white70,
+        colorScheme: colorScheme
       ),
-      home: const HomePage(),
+      home: HomePage(),
     );
   }
 }
