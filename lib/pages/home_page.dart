@@ -166,13 +166,7 @@ class _HomePageState extends State<HomePage> {
       documentSnapshot = await userReference.doc(gCurrentUser.id.toString()).get();
     }
 
-    currentUser = User(
-      id: documentSnapshot.id,
-      email: documentSnapshot['email'],
-      username: documentSnapshot['username'],
-      url: documentSnapshot['photoUrl'],
-      profileName: documentSnapshot['displayName'],
-      bio: documentSnapshot['bio'],
-    );
+    currentUser = User.fromDocument(documentSnapshot);
+
   }
 }
