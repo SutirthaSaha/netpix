@@ -1,16 +1,31 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:netpix/models/user.dart';
+import 'package:image/image.dart' as ImD;
+import 'package:netpix/widgets/progress_widget.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import 'home_page.dart';
+
 class UploadPage extends StatefulWidget {
+  final User gCurrentUser;
+
+  UploadPage({required this.gCurrentUser});
+
   @override
   _UploadPageState createState() => _UploadPageState();
 }
 
-class _UploadPageState extends State<UploadPage> {
+class _UploadPageState extends State<UploadPage> with AutomaticKeepAliveClientMixin<UploadPage>{
   File? file;
+  bool uploading = false;
+  String postId = const Uuid().v4();
+  TextEditingController descriptionTextEditingController = TextEditingController();
 
   captureImageWithCamera() async{
     Navigator.pop(context);
@@ -84,8 +99,123 @@ class _UploadPageState extends State<UploadPage> {
     );
   }
 
+  clearPostInfo(){
+    descriptionTextEditingController.clear();
+
+    setState(() {
+      file = null;
+    });
+  }
+
+  compressingPhoto() async{
+    final tDirectory = await getTemporaryDirectory();
+    final path = tDirectory.path;
+    ImD.Image? mImageFile = ImD.decodeImage(file!.readAsBytesSync());
+    final compressedImageFile = File('$path/img_$postId.jpg')..writeAsBytesSync(ImD.encodeJpg(mImageFile!, quality: 60));
+    setState(() {
+      file = compressedImageFile;
+    });
+  }
+
+  savePostInfoToFireStore({required String url, required String description}){
+    postsReference.doc(widget.gCurrentUser.id).collection("usersPosts").doc(postId).set({
+      "postId": postId,
+      "ownerId": widget.gCurrentUser.id,
+      "timestamp": DateTime.now(),
+      "likes": {},
+      "profileName": widget.gCurrentUser.profileName,
+      "username": widget.gCurrentUser.username,
+      "description": description,
+      "url": url
+    });
+  }
+
+  controlUploadAndSave() async {
+    setState(() {
+      uploading = true;
+    });
+    await compressingPhoto();
+    String downloadUrl = await uploadPhoto(file);
+    savePostInfoToFireStore(url: downloadUrl, description: descriptionTextEditingController.text);
+    descriptionTextEditingController.clear();
+    setState(() {
+      file = null;
+      uploading = false;
+      postId = const Uuid().v4();
+    });
+  }
+
+  Future <String> uploadPhoto(mImageFile) async {
+    UploadTask storageUploadTask = storageReference.child("post_$postId.jpg").putFile(mImageFile);
+    TaskSnapshot storageTaskSnapshot = await storageUploadTask;
+    String downloadUrl = await storageTaskSnapshot.ref.getDownloadURL();
+    return downloadUrl;
+  }
+
+
+  Widget displayUploadFormScreen(){
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        centerTitle: true,
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: clearPostInfo),
+        title: const Text("New Post", style: TextStyle(fontSize: 24.0, color: Colors.white, fontWeight: FontWeight.bold)),
+        actions: <Widget>[
+          TextButton(
+            // onPressed: uploading ? null : () => controlUploadAndSave(),
+            onPressed: controlUploadAndSave,
+            child: const Text("Share", style: TextStyle(color: Colors.lightBlueAccent, fontWeight: FontWeight.bold, fontSize: 16.0)),
+          )
+        ],
+      ),
+      body: ListView(
+        children: <Widget>[
+          uploading ? linearProgress() : const Text(""),
+          SizedBox(
+            height: 230.0,
+            width: MediaQuery.of(context).size.width * 0.8,
+            child: Center(
+              child: AspectRatio(
+                aspectRatio: 16/9,
+                child: Container(
+                  decoration: BoxDecoration(
+                      image: DecorationImage(image: FileImage(file!), fit: BoxFit.cover)
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Padding(padding: EdgeInsets.only(top: 12.0)),
+          ListTile(
+            leading: CircleAvatar(backgroundImage: CachedNetworkImageProvider(widget.gCurrentUser.url)),
+            title: Container(
+              width: 250.0,
+              padding: const EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blueAccent),
+                  borderRadius: const BorderRadius.all(Radius.circular(5))
+              ),
+              child: TextField(
+                style: const TextStyle(color: Colors.black),
+                controller: descriptionTextEditingController,
+                decoration: const InputDecoration(
+                  hintText: "Write a caption...",
+                  hintStyle: TextStyle(color: Colors.black),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
-    return displayUploadScreen();
+    return file == null ? displayUploadScreen(): displayUploadFormScreen();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -13,7 +14,9 @@ import 'notifications_page.dart';
 
 
 final GoogleSignIn gSignIn = GoogleSignIn();
-final userReference = FirebaseFirestore.instance.collection("users");
+final usersReference = FirebaseFirestore.instance.collection("users");
+final Reference storageReference = FirebaseStorage.instance.ref().child("Posts Pictures");
+final postsReference = FirebaseFirestore.instance.collection("posts");
 late final User currentUser;
 
 class HomePage extends StatefulWidget {
@@ -92,8 +95,8 @@ class _HomePageState extends State<HomePage> {
       body: PageView(
         children: <Widget>[
           TimelinePage(),
-          SearchPage(),
-          UploadPage(),
+          const SearchPage(),
+          UploadPage(gCurrentUser: currentUser),
           NotificationsPage(),
           const ProfilePage(userProfileId: "1234")
         ],
@@ -150,11 +153,11 @@ class _HomePageState extends State<HomePage> {
 
   saveUserInfoToFireStore() async {
     final GoogleSignInAccount? gCurrentUser = gSignIn.currentUser;
-    DocumentSnapshot documentSnapshot = await userReference.doc(gCurrentUser!.id.toString()).get();
+    DocumentSnapshot documentSnapshot = await usersReference.doc(gCurrentUser!.id.toString()).get();
 
     if(!documentSnapshot.exists){
       final username = await Navigator.push(context, MaterialPageRoute(builder: (context)=>CreateAccountPage()));
-      userReference.doc(gCurrentUser.id).set({
+      usersReference.doc(gCurrentUser.id).set({
         "id":gCurrentUser.id,
         "profileName":gCurrentUser.displayName,
         "username": username,
@@ -163,7 +166,7 @@ class _HomePageState extends State<HomePage> {
         "bio": "",
         "timestamp": DateTime.now()
       });
-      documentSnapshot = await userReference.doc(gCurrentUser.id.toString()).get();
+      documentSnapshot = await usersReference.doc(gCurrentUser.id.toString()).get();
     }
 
     currentUser = User.fromDocument(documentSnapshot);

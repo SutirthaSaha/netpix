@@ -16,7 +16,6 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> with AutomaticKeepAliveClientMixin<SearchPage>{
   TextEditingController searchTextEditingController = TextEditingController();
   Future<QuerySnapshot>? futureSearchResults;
-  final usersReference = FirebaseFirestore.instance.collection("users");
 
   controlSearching(String str){
     Future<QuerySnapshot> allUsers = usersReference.where("profileName", isGreaterThanOrEqualTo: str).get();
