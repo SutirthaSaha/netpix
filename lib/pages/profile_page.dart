@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:netpix/widgets/header_page.dart';
 
 class ProfilePage extends StatefulWidget {
+  final String userProfileId;
+
+  const ProfilePage({required this.userProfileId});
+
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }

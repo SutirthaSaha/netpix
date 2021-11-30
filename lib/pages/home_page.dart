@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
           SearchPage(),
           UploadPage(),
           NotificationsPage(),
-          ProfilePage()
+          const ProfilePage(userProfileId: "1234")
         ],
         controller: pageController,
         onPageChanged: whenPageChanges,
