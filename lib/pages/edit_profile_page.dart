@@ -131,7 +131,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   logoutUser() async {
     await gSignIn.signOut();
-    Navigator.push(context, MaterialPageRoute(builder: (context)=> HomePage()));
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) => const HomePage(),
+      ),
+          (route) => false,
+    );
   }
 
   Column createProfileNameTextFormField(){

@@ -33,10 +33,45 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState(){
     super.initState();
     getAllProfilePosts();
-    // getAllFollowers();
-    // getAllFollowing();
-    // checkIfAlreadyFollowing();
+    getAllFollowers();
+    getAllFollowing();
+    checkIfAlreadyFollowing();
   }
+
+  getAllFollowers() async{
+    QuerySnapshot querySnapshot = await followersReference
+        .doc(widget.userProfileId)
+        .collection("userFollowers")
+        .get();
+
+    setState(() {
+      countTotalFollowers = querySnapshot.docs.length;
+    });
+  }
+
+  getAllFollowing() async{
+    QuerySnapshot querySnapshot = await followingReference
+        .doc(widget.userProfileId)
+        .collection("userFollowing")
+        .get();
+
+    setState(() {
+      countTotalFollowing = querySnapshot.docs.length;
+    });
+  }
+
+  checkIfAlreadyFollowing() async{
+    DocumentSnapshot documentSnapshot = await followersReference
+        .doc(widget.userProfileId)
+        .collection("userFollowers")
+        .doc(currentOnlineUserId)
+        .get();
+
+    setState(() {
+      following = documentSnapshot.exists;
+    });
+  }
+
 
   createProfileTopView(){
     return FutureBuilder<DocumentSnapshot>(
@@ -66,9 +101,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
-                            createColumns("posts", 0),
-                            createColumns("followers", 0),
-                            createColumns("following", 0),
+                            createColumns("posts", countPost),
+                            createColumns("followers", countTotalFollowers),
+                            createColumns("following", countTotalFollowing),
                           ],
                         ),
                         Row(
@@ -99,11 +134,64 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  controlUnfollowUser(){
+    setState(() {
+      following = false;
+    });
+
+    followersReference.doc(widget.userProfileId).collection("userFollowers").doc(currentOnlineUserId).get().then((document){
+      if(document.exists){
+        document.reference.delete();
+      }
+    });
+
+    followingReference.doc(currentOnlineUserId).collection("userFollowing").doc(widget.userProfileId).get().then((document){
+      if(document.exists){
+        document.reference.delete();
+      }
+    });
+
+    activityFeedReference.doc(widget.userProfileId).collection("feedItems").doc(currentOnlineUserId).get().then((document){
+      if(document.exists){
+        document.reference.delete();
+      }
+    });
+  }
+
+  controlFollowUser(){
+    setState(() {
+      following = true;
+    });
+
+    followersReference.doc(widget.userProfileId).collection("userFollowers").doc(currentOnlineUserId).set({
+
+    });
+
+    followingReference.doc(currentOnlineUserId).collection("userFollowing").doc(widget.userProfileId).set({
+
+    });
+
+    activityFeedReference.doc(widget.userProfileId).collection("feedItems").doc(currentOnlineUserId).set({
+      "type": "follow",
+      "ownerId": widget.userProfileId,
+      "profileName": currentUser!.profileName,
+      "timestamp": DateTime.now(),
+      "userProfileImg": currentUser!.url,
+      "userId": currentOnlineUserId
+    });
+  }
+
   createButton() {
     bool ownProfile = currentOnlineUserId == widget.userProfileId;
     if (ownProfile) {
       return createButtonTitleAndFunction(
           title: "Edit Profile", performAction: editUserProfile);
+    }
+    else if(following){
+      return createButtonTitleAndFunction(title: "Unfollow", performAction: controlUnfollowUser);
+    }
+    else if(!following){
+      return createButtonTitleAndFunction(title: "Follow", performAction: controlFollowUser);
     }
   }
 

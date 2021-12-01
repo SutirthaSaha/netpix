@@ -19,6 +19,10 @@ final Reference storageReference = FirebaseStorage.instance.ref().child("Posts P
 final postsReference = FirebaseFirestore.instance.collection("posts");
 final commentsReference = FirebaseFirestore.instance.collection("comments");
 final activityFeedReference = FirebaseFirestore.instance.collection("feed");
+final followersReference = FirebaseFirestore.instance.collection("followers");
+final followingReference = FirebaseFirestore.instance.collection("following");
+
+final DateTime timestamp = DateTime.now();
 User? currentUser;
 
 class HomePage extends StatefulWidget {
