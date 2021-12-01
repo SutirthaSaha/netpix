@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -112,10 +114,66 @@ class _PostState extends State<Post> {
     Navigator.push(context, MaterialPageRoute(builder: (context)=> ProfilePage(userProfileId: profileId)));
   }
 
+  removeLike(){
+    bool isNotPostOwner = currentOnlineUserId != ownerId;
+
+    if(isNotPostOwner){
+      activityFeedReference.doc(ownerId).collection("feedItems").doc(postId).get().then((document){
+        if(document.exists){
+          document.reference.delete();
+        }
+      });
+    }
+  }
+
+  addLike(){
+    bool isNotPostOwner = currentOnlineUserId != ownerId;
+
+    if(isNotPostOwner){
+      activityFeedReference.doc(ownerId).collection("feedItems").doc(postId).set({
+        "type": "like",
+        "userId": currentUser!.id,
+        "timestamp": DateTime.now(),
+        "url": url,
+        "postId": postId,
+        "profileName": currentUser!.profileName,
+        "userProfileImg": currentUser!.url
+      });
+    }
+  }
+
+  controlUserPostLike(){
+    bool _liked = likes[currentOnlineUserId] == true;
+
+    if(_liked){
+      postsReference.doc(ownerId).collection("userPosts").doc(postId).update({"likes.$currentOnlineUserId": false});
+      removeLike();
+      setState(() {
+        likeCount--;
+        isLiked = false;
+        likes[currentOnlineUserId] = false;
+      });
+    }
+    else if(!_liked){
+      postsReference.doc(ownerId).collection("userPosts").doc(postId).update({"likes.$currentOnlineUserId": true});
+      addLike();
+      setState(() {
+        likeCount++;
+        isLiked = true;
+        likes[currentOnlineUserId] = true;
+        showHeart = true;
+      });
+      Timer(const Duration(milliseconds: 800), (){
+        setState(() {
+          showHeart = false;
+        });
+      });
+    }
+  }
+
   createPostPicture(){
     return GestureDetector(
-      // onDoubleTap: ()=> controlUserPostLike(),
-      onDoubleTap: ()=>print("Like"),
+      onDoubleTap: ()=> controlUserPostLike(),
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
@@ -134,8 +192,7 @@ class _PostState extends State<Post> {
           children: <Widget>[
             const Padding(padding: EdgeInsets.only(top: 40.0, left: 20.0)),
             GestureDetector(
-              // onTap: ()=> controlUserPostLike(),
-              onTap: ()=>"Like",
+              onTap: ()=> controlUserPostLike(),
               child: Icon(
                 isLiked? Icons.favorite: Icons.favorite_border,
                 size: 20.0,
@@ -176,7 +233,7 @@ class _PostState extends State<Post> {
               ),
             ),
             Expanded(
-              child: Text(description, style: TextStyle(color: Colors.black)),
+              child: Text(description, style: const TextStyle(color: Colors.black)),
             )
           ],
         ),
