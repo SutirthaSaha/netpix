@@ -30,7 +30,7 @@ dependencies:
   flutter:
     sdk: flutter
   firebase_core: ^1.0.1
-  cloud_firestore: ^1.0.1
+  cloud_firestore: ^3.1.0
   image_picker: ^0.7.2+1
   firebase_storage: ^8.0.0
   firebase_auth: ^1.0.1
@@ -45,7 +45,7 @@ dependencies:
   location: ^4.1.1
   geocode: ^1.0.1
   flare_flutter: ^2.0.6
-  timeago: 2.0.17
+  timeago: ^3.0.0
   path_provider: ^2.0.7
 
 dev_dependencies:

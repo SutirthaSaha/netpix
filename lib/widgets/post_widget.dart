@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:netpix/models/user.dart';
+import 'package:netpix/pages/comments_page.dart';
 import 'package:netpix/pages/home_page.dart';
 import 'package:netpix/pages/profile_page.dart';
 import 'package:netpix/widgets/progress_widget.dart';
@@ -201,8 +202,7 @@ class _PostState extends State<Post> {
             ),
             const Padding(padding: EdgeInsets.only(right: 20.0)),
             GestureDetector(
-//              onTap: ()=> displayComments(context, postId: postId, ownerId: ownerId, url: url),
-              onTap: ()=>print("comments"),
+              onTap: ()=> displayComments(context, postId: postId, ownerId: ownerId, url: url),
               child: const Icon(
                 Icons.chat_bubble_outline,
                 color: Colors.black,
@@ -239,6 +239,10 @@ class _PostState extends State<Post> {
         ),
       ],
     );
+  }
+
+  displayComments(BuildContext context, {required String postId, required String ownerId, required String url}) {
+    Navigator.push(context, MaterialPageRoute(builder: (context)=> CommentsPage(postId: postId, postOwnerId: ownerId, postImageUrl: url)));
   }
 
   @override
