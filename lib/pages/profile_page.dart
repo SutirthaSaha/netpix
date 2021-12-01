@@ -134,7 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  controlUnfollowUser(){
+  controlUnfollowUser() async {
     setState(() {
       following = false;
     });
@@ -156,9 +156,16 @@ class _ProfilePageState extends State<ProfilePage> {
         document.reference.delete();
       }
     });
+
+    QuerySnapshot querySnapshot = await timelineReference.doc(currentOnlineUserId).collection("timelinePosts").where("ownerId", isEqualTo: widget.userProfileId).get();
+    for (var document in querySnapshot.docs) {
+      if(document.exists){
+        document.reference.delete();
+      }
+    }
   }
 
-  controlFollowUser(){
+  controlFollowUser() async {
     setState(() {
       following = true;
     });
@@ -179,6 +186,13 @@ class _ProfilePageState extends State<ProfilePage> {
       "userProfileImg": currentUser!.url,
       "userId": currentOnlineUserId
     });
+
+    QuerySnapshot querySnapshot = await postsReference.doc(widget.userProfileId).collection("userPosts").get();
+    for (var document in querySnapshot.docs) {
+      if(document.exists){
+        timelineReference.doc(currentOnlineUserId).collection("timelinePosts").doc(document.id).set(document.data() as Map<String, dynamic>);
+      }
+    }
   }
 
   createButton() {

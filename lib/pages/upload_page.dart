@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -128,6 +129,17 @@ class _UploadPageState extends State<UploadPage> with AutomaticKeepAliveClientMi
       "description": description,
       "url": url
     });
+    savePostsToTimeline(postId);
+  }
+
+  savePostsToTimeline(String id) async {
+    QuerySnapshot querySnapshot = await followersReference.doc(currentUser!.id).collection("userFollowers").get();
+    DocumentSnapshot post = await postsReference.doc(currentUser!.id).collection("userPosts").doc(id).get();
+    for (var document in querySnapshot.docs) {
+      if(document.exists){
+        timelineReference.doc(document.id).collection("timelinePosts").doc(postId).set(post.data() as Map<String, dynamic>);
+      }
+    }
   }
 
   controlUploadAndSave() async {
@@ -162,8 +174,7 @@ class _UploadPageState extends State<UploadPage> with AutomaticKeepAliveClientMi
         title: const Text("New Post", style: TextStyle(fontSize: 24.0, color: Colors.white, fontWeight: FontWeight.bold)),
         actions: <Widget>[
           TextButton(
-            // onPressed: uploading ? null : () => controlUploadAndSave(),
-            onPressed: controlUploadAndSave,
+            onPressed: uploading ? null : () => controlUploadAndSave(),
             child: const Text("Share", style: TextStyle(color: Colors.lightBlueAccent, fontWeight: FontWeight.bold, fontSize: 16.0)),
           )
         ],
