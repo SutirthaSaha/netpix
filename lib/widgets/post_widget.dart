@@ -70,6 +70,7 @@ class _PostState extends State<Post> {
   Map likes;
   int likeCount;
   late bool isLiked;
+  bool deleting = false;
 
   _PostState({
     required this.postId,
@@ -102,9 +103,8 @@ class _PostState extends State<Post> {
               style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
           ),
-          trailing: isPostOwner? IconButton(icon: const Icon(Icons.more_vert, color: Colors.black,),
-            // onPressed: ()=> controlPostDelete(context),
-            onPressed: ()=>print("Delete"),
+          trailing: isPostOwner? IconButton(icon: const Icon(Icons.delete, color: Colors.black,),
+            onPressed: ()=> controlPostDelete(context),
           ): const Text(""),
         );
       },
@@ -253,11 +253,63 @@ class _PostState extends State<Post> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          deleting ? linearProgress() : const Text(""),
           createPostHead(),
           createPostPicture(),
           createPostFooter()
         ],
       ),
     );
+  }
+
+
+  controlPostDelete(BuildContext mContext){
+    return showDialog(
+        context: mContext,
+        builder: (context){
+          return SimpleDialog(
+            title: const Text("What do you want?", style: TextStyle(color: Colors.black)),
+            children: <Widget>[
+              SimpleDialogOption(
+                child: const Text("Delete", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                onPressed: (){
+                  Navigator.pop(context);
+                  removeUserPost();
+                },
+              ),
+              SimpleDialogOption(
+                  child: const Text("Cancel", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  onPressed: ()=> Navigator.pop(context)
+              ),
+            ],
+          );
+        }
+    );
+  }
+
+  removeUserPost() async{
+    setState(() {
+      deleting = true;
+    });
+    await postsReference.doc(ownerId).collection("userPosts").doc(postId).get()
+        .then((document){
+      if(document.exists){
+        document.reference.delete();
+      }
+    });
+    await storageReference.child("post_$postId.jpg").delete();
+    QuerySnapshot querySnapshot = await activityFeedReference.doc(ownerId).collection("feedItems").where("postId", isEqualTo: postId).get();
+    for (var document in querySnapshot.docs) {
+      if(document.exists){
+        await document.reference.delete();
+      }
+    }
+    QuerySnapshot commentsQuerySnapshot = await commentsReference.doc(postId).collection("comments").get();
+    for (var document in commentsQuerySnapshot.docs) {
+      await document.reference.delete();
+    }
+    setState(() {
+      Navigator.pop(context);
+    });
   }
 }
