@@ -118,7 +118,7 @@ class _UploadPageState extends State<UploadPage> with AutomaticKeepAliveClientMi
   }
 
   savePostInfoToFireStore({required String url, required String description}){
-    postsReference.doc(widget.gCurrentUser.id).collection("usersPosts").doc(postId).set({
+    postsReference.doc(widget.gCurrentUser.id).collection("userPosts").doc(postId).set({
       "postId": postId,
       "ownerId": widget.gCurrentUser.id,
       "timestamp": DateTime.now(),
