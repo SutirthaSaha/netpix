@@ -17,7 +17,7 @@ final GoogleSignIn gSignIn = GoogleSignIn();
 final usersReference = FirebaseFirestore.instance.collection("users");
 final Reference storageReference = FirebaseStorage.instance.ref().child("Posts Pictures");
 final postsReference = FirebaseFirestore.instance.collection("posts");
-late final User currentUser;
+User? currentUser;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -96,9 +96,9 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           TimelinePage(),
           const SearchPage(),
-          UploadPage(gCurrentUser: currentUser),
+          UploadPage(gCurrentUser: currentUser!),
           NotificationsPage(),
-          const ProfilePage(userProfileId: "1234")
+          ProfilePage(userProfileId: currentUser!.id)
         ],
         controller: pageController,
         onPageChanged: whenPageChanges,

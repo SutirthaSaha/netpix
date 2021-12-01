@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         dialogBackgroundColor: Colors.white,
         primarySwatch: Colors.grey,
         cardColor: Colors.white70,
-        colorScheme: colorScheme
+        colorScheme: colorScheme, textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.black)
       ),
       home: HomePage(),
     );
